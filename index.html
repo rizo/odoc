@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>odoc</title><link rel="stylesheet" href="../odoc.css"/><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="generator" content="doc-ock-html v1.0.0-1-g1fc9bf0"/></head><body><nav><a href="../index.html">Up</a></nav><h2>The new OCaml documentation generator</h2><p>odoc is a documentation generator for OCaml, designed to address some of the
+deficiencies of ocamldoc. In particular, it aims to:
+</p><ul><li>Accurately handle all of the OCaml language, providing accurate links and
+references for code bases that make heavy use of OCaml's advanced module
+features.</li><li>Support links and references between different libraries and packages.</li></ul><h2 id="install" class="anchored"><a href="#install" class="anchor"></a>Getting odoc</h2><p>Using opam is of course the easiest way:</p><pre>opam install odoc</pre><p>But otherwise you can build it from sources:</p><pre>$ mkdir odoc &amp;&amp; cd odoc &amp;&amp; touch jbuild-workspace.here
+$ git clone http://github.com/ocaml-doc/odoc.git
+$ git clone http://github.com/ocaml-doc/doc-ock.git
+$ git clone http://github.com/ocaml-doc/doc-ock-html.git
+$ git clone http://github.com/ocaml-doc/doc-ock-xml.git
+$ git clone http://github.com/ocaml-doc/octavius.git
+$ jbuilder build @install
+$ jbuilder install</pre><p>Assuming you have OCaml ≥ 4.03 available and the following set of dependencies
+installed:
+<a href="http://erratique.ch/software/bos">bos</a>,
+<a href="http://erratique.ch/software/cmdliner">cmdliner</a>,
+<a href="http://erratique.ch/software/fpath">fpath</a>,
+<a href="http://gallium.inria.fr/~fpottier/menhir/">menhir</a>,
+<a href="http://ocsigen.org/tyxml/">tyxml</a> and
+<a href="http://erratique.ch/software/xmlm">xmlm</a> as well as
+<a href="http://github.com/janestreet/jbuilder">jbuilder</a> for building. All of which
+are available from opam.</p><h2 id="usage" class="anchored"><a href="#usage" class="anchor"></a>Using odoc</h2><p><a href="http://jbuilder.readthedocs.io/en/latest/api-doc.html">Jbuilder</a> and
+<a href="http://erratique.ch/software/odig">Odig</a> already know how to invoke odoc for
+you on your libraries.
+They are definitely the easiest, and recommended, way to use odoc for
+individuals.</p><p>If you want to add support for odoc to your preferred build system, or simply
+don't want to use Jbuilder or Odig, you can always invoke odoc directly.
+Instructions regarding how it should be run are available
+<a href="manual_usage.html#main">here</a>.</p><h4 id="ocamldoc" class="anchored"><a href="#ocamldoc" class="anchor"></a>Divergences from ocamldoc</h4><p>Your docstrings written to work with ocamldoc should be transparently supported
+by odoc. However some additions have been made to the syntax which are described
+<a href="../octavius/syntax.html">here</a>.</p><h2 id="contributing" class="anchored"><a href="#contributing" class="anchor"></a>Contributing</h2><h4 id="issues" class="anchored"><a href="#issues" class="anchor"></a>Reporting issues</h4><p>The easiest way to contribute is to report any issue you encounter
+<a href="http://github.com/ocaml-doc/odoc/issues">here</a>.</p><h4 id="internals" class="anchored"><a href="#internals" class="anchor"></a>Internal organization of odoc</h4><p>If you wish to contribute to odoc, for example by fixing some bugs, you should
+know that odoc is split into the following set of packages:</p><ul><li><a href="http://github.com/ocaml-doc/octavius">octavius</a> is a parser for a simple
+documentation language.
+While <code class="code">doc-ock</code> uses it to parse the documentation comments, it is independent
+of the other parts of odoc and can also be used by other tools (eg. a
+<a href="https://github.com/janestreet/ppx_js_style/blob/master/src/ppx_js_style.ml#L208">linter</a>
+for ocaml sources which would also check the syntax of docstrings).</li></ul><ul><li><a href="http://github.com/ocaml-doc/doc-ock">doc-ock</a> deals with the problem of
+cross-referencing within OCaml's semantics. It has no idea of how things are
+divided into packages or laid out on the file system -- its whole job lives
+within the OCaml language's semantics.</li></ul><ul><li><a href="http://github.com/ocaml-doc/doc-ock-html">doc-ock-html</a> is fundamentally
+just a function from <a href="../doc-ock/DocOckTypes/index.html">doc-ock's representation</a> to HTML. This
+should take care of everything to do with how the documentation looks in the
+browser.</li></ul><ul><li><a href="http://github.com/ocaml-doc/doc-ock-xml">doc-ock-xml</a> is mostly legacy at
+this point. Originally, odoc files weren't marshalled AST but an XML
+representation of the AST. That later changed for performance (and disk space
+usage) reasons, but we've kept the library around (and expose it through a
+<code class="code">to-xml</code> command) mainly for debugging purposes. We plan to get rid of it
+soon.</li></ul><ul><li><a href="http://github.com/ocaml-doc/odoc">odoc</a> deals with the relationship between
+the file system, packages, and the OCaml language semantics (e.g. this module is
+from this file and lives in this package).
+Since it deals with the file system it is also in charge of handling
+<code class="code">doc-ock</code>s multiple stages (e.g. managing where the <code class="code">.odoc</code> intermediate files
+live and making sure things are run in the right dependency order).</li></ul><h4 id="contribution_new_backend" class="anchored"><a href="#contribution_new_backend" class="anchor"></a>Adding a backend to odoc</h4><p>Adding a new backend (latex, anyone?) to odoc then consists of writing a library
+similar to <code class="code">doc-ock-html</code> and exposing a new command in odoc working similarly
+to <a href="Odoc/Html/index.html"><code class="code">odoc html</code></a>.</p></body></html>

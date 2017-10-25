@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>odoc</title><link rel="stylesheet" href="../odoc.css"/><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="generator" content="doc-ock-html v1.0.0-1-g1fc9bf0"/></head><body><nav><a href="../index.html">Up</a></nav><h2 id="main" class="anchored"><a href="#main" class="anchor"></a>Invoking odoc manually</h2><p>odoc works in two steps:
+</p><ol><li><a href="manual_usage.html#compile"><code class="code">odoc compile</code></a>: produces a <code class="code">.odoc</code> file from the build
+artifacts of the compiler</li><li><a href="manual_usage.html#html"><code class="code">odoc html</code></a>: produces html files from a <code class="code">.odoc</code> file.</li></ol><h3 id="compile" class="anchored"><a href="#compile" class="anchor"></a>The compilation step</h3><p>In this step, <code class="code">odoc</code> will work on <code class="code">.cmti</code>, <code class="code">.cmt</code> and <code class="code">.cmi</code> files and produce a
+<code class="code">.odoc</code> file.</p><p><code class="code">odoc compile</code> is meant to be invoked in the same way that the ocaml compiler
+was, that is: if a unit <code class="code">Foo</code> depends on a unit <code class="code">Bar</code>, then you must call odoc
+on <code class="code">Bar</code> first.</p><p>Also, just as you add directories to the compiler load path using <code class="code">-I</code> so that
+it can find <code class="code">.cmi</code> files, you must tell odoc in which directories it can find
+the <code class="code">.odoc</code> files it needs (for <a href="../doc-ock/DocOck/index.html#resolving">resolving</a>, and
+<a href="../doc-ock/DocOck/index.html#expansion">expansion</a>) using <code class="code">-I</code>.</p><p>Omitting some directories from odoc's include list is not a fatal error, it
+simply means that odoc won't be able to resolve some paths and references.</p><h4>Hand written documentation pages</h4><p>As said previously, <code class="code">odoc compile</code> accepts build artifacts of the compiler as
+inputs. However, it also accepts <code class="code">.mld</code> files. These are manually written
+(textual) files in the same <a href="../octavius/syntax.html#accepted_syntax">syntax</a> as usual
+documentation comments.</p><p>By default <code class="code">foo.mld</code> will be translated to <code class="code">page-foo.odoc</code> which in turn will
+become <code class="code">foo.html</code>.</p><p>For more details, have a look at:
+</p><pre><code class="code">$ odoc compile --help</code></pre><h3 id="html" class="anchored"><a href="#html" class="anchor"></a>Emitting html</h3><p><code class="code">odoc html</code> takes a <code class="code">.odoc</code> file and produces either a single html file (in case
+of hand written pages) or a directory tree reflecting the structure of the
+compilation unit being documented.</p><p>This step does also do another round of resolving and expansion, to handle the
+forward references which couldn't be properly processed by <code class="code">odoc compile</code>. In
+this step the dependency between compilation units of your library is irrelevant
+(so you can process files in any order you want), dependencies are considered
+only at a package level: all the packages you depend on should have been <code class="code">odoc
+compile</code>d already and their <code class="code">.odoc</code> file should be made available to odoc for
+every single file it processes.</p><p>For more details, have a look at:
+</p><pre><code class="code">$ odoc html --help</code></pre></body></html>
