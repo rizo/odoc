@@ -225,13 +225,15 @@ end
 
 let render_fragment = Relative_link.Of_fragment.render_raw
 
-let page_creator ?kind ?(theme_uri = Relative "./") ~path header_docs content =
-  let rec add_dotdot ~n acc =
-    if n <= 0 then
-      acc
-    else
-      add_dotdot ~n:(n - 1) ("../" ^ acc)
-  in
+
+let rec add_dotdot ~n acc =
+  if n <= 0 then
+    acc
+  else
+    add_dotdot ~n:(n - 1) ("../" ^ acc)
+
+
+let head_creator ?kind ~theme_uri ~path : Html_types.head Html.elt =
   let resolve_relative_uri uri =
     (* Remove the first "dot segment". *)
     let uri =
@@ -249,32 +251,31 @@ let page_creator ?kind ?(theme_uri = Relative "./") ~path header_docs content =
     in
     add_dotdot uri ~n
   in
+  let name = List.hd @@ List.rev path in
+  let title_string = Printf.sprintf "%s (%s)" name (String.concat "." path) in
 
-  let head : Html_types.head Html.elt =
-    let name = List.hd @@ List.rev path in
-    let title_string = Printf.sprintf "%s (%s)" name (String.concat "." path) in
-
-    let theme_uri =
-      match theme_uri with
-      | Absolute uri -> uri
-      | Relative uri -> resolve_relative_uri uri
-    in
-
-    let support_files_uri = resolve_relative_uri "./" in
-
-    let odoc_css_uri = theme_uri ^ "odoc.css" in
-    let highlight_js_uri = support_files_uri ^ "highlight.pack.js" in
-
-    Html.head (Html.title (Html.pcdata title_string)) [
-      Html.link ~rel:[`Stylesheet] ~href:odoc_css_uri () ;
-      Html.meta ~a:[ Html.a_charset "utf-8" ] () ;
-      Html.meta ~a:[ Html.a_name "viewport";
-                  Html.a_content "width=device-width,initial-scale=1.0"; ] ();
-      Html.script ~a:[Html.a_src highlight_js_uri] (Html.pcdata "");
-      Html.script (Html.pcdata "hljs.initHighlightingOnLoad();");
-    ]
+  let theme_uri =
+    match theme_uri with
+    | Absolute uri -> uri
+    | Relative uri -> resolve_relative_uri uri
   in
 
+  let support_files_uri = resolve_relative_uri "./" in
+
+  let odoc_css_uri = theme_uri ^ "odoc.css" in
+  let highlight_js_uri = support_files_uri ^ "highlight.pack.js" in
+
+  Html.head (Html.title (Html.pcdata title_string)) [
+    Html.link ~rel:[`Stylesheet] ~href:odoc_css_uri () ;
+    Html.meta ~a:[ Html.a_charset "utf-8" ] () ;
+    Html.meta ~a:[ Html.a_name "viewport";
+                   Html.a_content "width=device-width,initial-scale=1.0"; ] ();
+    Html.script ~a:[Html.a_src highlight_js_uri] (Html.pcdata "");
+    Html.script (Html.pcdata "hljs.initHighlightingOnLoad();");
+  ]
+
+
+let body_creator ?kind ~path header_docs content =
   let wrapped_content : (Html_types.div_content Html.elt) list =
     let up_href =
       if !Relative_link.semantic_uris then ".." else "../index.html" in
@@ -346,10 +347,15 @@ let page_creator ?kind ?(theme_uri = Relative "./") ~path header_docs content =
 
     [Html.div ~a:[Html.a_class ["content"]] (header::content)]
   in
+  Html.body wrapped_content
 
-  let html : [ `Html ] Html.elt = Html.html head (Html.body wrapped_content) in
 
+let page_creator ?kind ?(theme_uri = Relative "./") ~path header_docs content =
+  let head = head_creator ?kind ~theme_uri ~path in
+  let body = body_creator ?kind ~path header_docs content in
+  let html : [ `Html ] Html.elt = Html.html head body in
   html
+
 
 let make ?(header_docs = []) ?theme_uri content children =
   assert (not (Stack.is_empty path));
