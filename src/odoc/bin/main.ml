@@ -177,7 +177,7 @@ module Html : sig
 end = struct
 
   let html semantic_uris closed_details _hidden directories output_dir index_for
-        syntax theme_uri input_file =
+        syntax theme_uri body_only input_file =
     Html.Html_tree.Relative_link.semantic_uris := semantic_uris;
     Html.Html_tree.open_details := not closed_details;
     let env = Env.create ~important_digests:false ~directories in
@@ -223,8 +223,14 @@ end = struct
       in
       Arg.(value & opt (pconv convert_syntax) (Html.Html_tree.OCaml) @@ info ~docv:"SYNTAX" ~doc ["syntax"])
     in
+    let body_only =
+      let doc = "If this flag is passed the generated HTML will only include \
+                 the content of the body element. This is useful for embedding \
+                 the generated content in other documents." in
+      Arg.(value & flag & info ~doc ["body-only"])
+    in
     Term.(const html $ semantic_uris $ closed_details $ hidden $
-      odoc_file_directories $ dst $ index_for $ syntax $ theme_uri $ input)
+      odoc_file_directories $ dst $ index_for $ syntax $ theme_uri $ body_only $ input)
 
   let info =
     Term.info ~doc:"Generates an html file from an odoc one" "html"

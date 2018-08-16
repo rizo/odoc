@@ -621,9 +621,9 @@ sig
     item_to_id:('item -> string option) ->
     item_to_spec:('item -> string option) ->
     render_leaf_item:('item -> rendered_item * Comment.docs) ->
-    render_nested_article:('item -> rendered_item * Html_tree.t list) ->
+    render_nested_article:('item -> rendered_item * 'root Html_tree.t list) ->
     ((_, 'item) tagged_item) list ->
-      rendered_item * toc * Html_tree.t list
+      rendered_item * toc * 'root Html_tree.t list
 
   val render_toc :
     toc -> ([> Html_types.flow5_without_header_footer ] Html.elt) list
@@ -756,18 +756,18 @@ struct
 
      The record is also convenient for passing around the two item-rendering
      functions. *)
-  type ('kind, 'item) sectioning_state = {
+  type ('root, 'kind, 'item) sectioning_state = {
     input_items : (('kind, 'item) tagged_item) list;
     input_comment : Comment.docs;
 
     acc_html : html list;
     acc_toc : toc;
-    acc_subpages : Html_tree.t list;
+    acc_subpages : 'root Html_tree.t list;
 
     item_to_id : 'item -> string option;
     item_to_spec : 'item -> string option;
     render_leaf_item : 'item -> rendered_item * Comment.docs;
-    render_nested_article : 'item -> rendered_item * Html_tree.t list;
+    render_nested_article : 'item -> rendered_item * 'root Html_tree.t list;
   }
 
   let finish_section state =
@@ -964,12 +964,12 @@ let path_to_id path =
 module Class :
 sig
   val class_ :
-    ?theme_uri:Html_tree.uri -> Lang.Class.t ->
-      ((Html_types.article_content Html.elt) list) * (Html_tree.t list)
+    ?theme_uri:Html_tree.uri -> root:'a Html_tree.root -> Lang.Class.t ->
+      ((Html_types.article_content Html.elt) list) * ('a Html_tree.t list)
 
   val class_type :
-    ?theme_uri:Html_tree.uri -> Lang.ClassType.t ->
-      ((Html_types.article_content Html.elt) list) * (Html_tree.t list)
+    ?theme_uri:Html_tree.uri -> root:'a Html_tree.root -> Lang.ClassType.t ->
+      ((Html_types.article_content Html.elt) list) * ('a Html_tree.t list)
 end =
 struct
   let class_signature_item_to_id : Lang.ClassSignature.item -> _ = function
@@ -1075,7 +1075,7 @@ struct
         type_expr ~needs_parentheses:true src @
         Html.pcdata " " :: Markup.ML.arrow :: Html.pcdata " " :: class_decl dst
 
-  and class_ ?theme_uri (t : Model.Lang.Class.t) =
+  and class_ ?theme_uri ~root (t : Model.Lang.Class.t) =
     let name = Paths.Identifier.name t.id in
     let params = format_params ~delim:(`brackets) t.params in
     let virtual_ =
@@ -1094,7 +1094,7 @@ struct
           | [] -> expansion
           | _ -> Html.div ~a:[ Html.a_class ["doc"] ] doc :: expansion
         in
-        let subtree = Html_tree.make ?theme_uri expansion [] in
+        let subtree = Html_tree.make ?theme_uri ~root expansion [] in
         Html_tree.leave ();
         Html.a ~a:[ a_href ~kind:`Class name ] [Html.pcdata name], [subtree]
     in
@@ -1112,7 +1112,7 @@ struct
     in
     region, subtree
 
-  and class_type ?theme_uri (t : Model.Lang.ClassType.t) =
+  and class_type ?theme_uri ~root (t : Model.Lang.ClassType.t) =
     let name = Paths.Identifier.name t.id in
     let params = format_params ~delim:(`brackets) t.params in
     let virtual_ =
@@ -1131,7 +1131,7 @@ struct
           | [] -> expansion
           | _ -> Html.div ~a:[ Html.a_class ["doc"] ] doc :: expansion
         in
-        let subtree = Html_tree.make ?theme_uri expansion [] in
+        let subtree = Html_tree.make ?theme_uri ~root expansion [] in
         Html_tree.leave ();
         Html.a ~a:[ a_href ~kind:`Cty name ] [Html.pcdata name], [subtree]
     in
@@ -1546,8 +1546,13 @@ open Module
 
 module Page :
 sig
-  val compilation_unit : ?theme_uri:Html_tree.uri -> Lang.Compilation_unit.t -> Html_tree.t
-  val page : ?theme_uri:Html_tree.uri -> Lang.Page.t -> Html_tree.t
+val compilation_unit :
+  ?theme_uri:Html_tree.uri -> ?body_only:bool ->
+  Model.Lang.Compilation_unit.t -> Html_tree.t
+
+val page :
+  ?theme_uri:Html_tree.uri -> ?body_only:bool ->
+  Model.Lang.Page.t -> Html_tree.t
 end =
 struct
   let pack
@@ -1572,7 +1577,8 @@ struct
 
 
 
-  let compilation_unit ?theme_uri (t : Model.Lang.Compilation_unit.t) : Html_tree.t =
+  let compilation_unit ?theme_uri ?(content_type=Html_tree.Body)
+      (t : Model.Lang.Compilation_unit.t) : Html_tree.t =
     let package =
       match t.id with
       | Model.Paths.Identifier.Root (a, _) -> a.package
@@ -1594,11 +1600,12 @@ struct
       | Pack packed ->
         header_docs, pack packed, []
     in
-    Html_tree.make ~header_docs ?theme_uri html subtree
+    if body_only then
+      Html_tree.make ~header_docs ?theme_uri html subtree
 
 
 
-  let page ?theme_uri (t : Model.Lang.Page.t) : Html_tree.t =
+  let page ?theme_uri ?body_only (t : Model.Lang.Page.t) : Html_tree.t =
     let package, name =
       match t.name with
       | Model.Paths.Identifier.Page (a, name) -> a.package, name

@@ -25,15 +25,19 @@ type syntax = OCaml | Reason
 
 val string_of_syntax: syntax -> string
 
-type t = private {
+type 'a root =
+  | Html : Html_types.html root
+  | Body : Html_types.body root
+
+type 'a t = private {
   name : string;
-  content : [ `Html ] Html.elt;
-  children : t list
+  content : 'a Html.elt;
+  children : 'a t list
 }
 
 val traverse
-    : f:(parents:string list -> string -> [ `Html ] Html.elt -> unit)
-  -> t
+    : f:(parents:string list -> string -> 'a Html.elt -> unit)
+    -> 'a t
   -> unit
 
 type kind = [ `Arg | `Mod | `Mty | `Class | `Cty | `Page ]
@@ -58,9 +62,10 @@ val leave : unit -> unit
 val make :
   ?header_docs:(Html_types.flow5_without_header_footer Html.elt) list ->
   ?theme_uri:uri ->
+  root: 'a root ->
   (Html_types.div_content Html.elt) list ->
-  t list ->
-    t
+  'a t list ->
+    'a t
 (** [make ?theme_uri (body, children)] calls "the page creator" to turn [body]
     into an [[ `Html ] elt]. If [theme_uri] is provided, it will be used to
     locate the theme files, otherwise the HTML output directory is used. *)

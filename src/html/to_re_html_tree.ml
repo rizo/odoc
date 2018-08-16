@@ -639,9 +639,9 @@ sig
     item_to_id:('item -> string option) ->
     item_to_spec:('item -> string option) ->
     render_leaf_item:('item -> rendered_item * Comment.docs) ->
-    render_nested_article:('item -> rendered_item * Html_tree.t list) ->
+    render_nested_article:('item -> rendered_item * 'root Html_tree.t list) ->
     ((_, 'item) tagged_item) list ->
-      rendered_item * toc * Html_tree.t list
+      rendered_item * toc * 'root Html_tree.t list
 
   val render_toc :
     toc -> ([> Html_types.flow5_without_header_footer ] Html.elt) list
@@ -774,18 +774,18 @@ struct
 
      The record is also convenient for passing around the two item-rendering
      functions. *)
-  type ('kind, 'item) sectioning_state = {
+  type ('root, 'kind, 'item) sectioning_state = {
     input_items : (('kind, 'item) tagged_item) list;
     input_comment : Comment.docs;
 
     acc_html : html list;
     acc_toc : toc;
-    acc_subpages : Html_tree.t list;
+    acc_subpages : 'root Html_tree.t list;
 
     item_to_id : 'item -> string option;
     item_to_spec : 'item -> string option;
     render_leaf_item : 'item -> rendered_item * Comment.docs;
-    render_nested_article : 'item -> rendered_item * Html_tree.t list;
+    render_nested_article : 'item -> rendered_item * 'root Html_tree.t list;
   }
 
   let finish_section state =
@@ -1176,7 +1176,7 @@ module Module :
 sig
   val signature :
     ?theme_uri:Html_tree.uri -> Lang.Signature.t ->
-      (Html_types.div_content Html.elt) list * toc * Html_tree.t list
+      (Html_types.div_content Html.elt) list * toc * 'a Html_tree.t list
 end =
 struct
   let signature_item_to_id : Lang.Signature.item -> _ = function

@@ -31,10 +31,14 @@ type uri =
   | Absolute of string
   | Relative of string
 
-type t = {
+type 'a root =
+  | Html : Html_types.html root
+  | Body : Html_types.body root
+
+type 'a t = {
   name : string;
-  content : [ `Html ] Html.elt;
-  children : t list
+  content : 'a Html.elt;
+  children : 'a t list
 }
 
 let path = Stack.create ()
@@ -275,7 +279,7 @@ let head_creator ?kind ~theme_uri ~path : Html_types.head Html.elt =
   ]
 
 
-let body_creator ?kind ~path header_docs content =
+let body_creator ?kind ~path header_docs content : [ `Body ] Html.elt =
   let wrapped_content : (Html_types.div_content Html.elt) list =
     let up_href =
       if !Relative_link.semantic_uris then ".." else "../index.html" in
@@ -350,20 +354,25 @@ let body_creator ?kind ~path header_docs content =
   Html.body wrapped_content
 
 
-let page_creator ?kind ?(theme_uri = Relative "./") ~path header_docs content =
+let page_creator ?kind ~theme_uri ~path header_docs content : [ `Html ] Html.elt =
   let head = head_creator ?kind ~theme_uri ~path in
   let body = body_creator ?kind ~path header_docs content in
-  let html : [ `Html ] Html.elt = Html.html head body in
-  html
+  Html.html head body
 
 
-let make ?(header_docs = []) ?theme_uri content children =
+let make (type a) ?(header_docs = []) ?(theme_uri = Relative "./")
+    ~(root: a root) content children : a t =
   assert (not (Stack.is_empty path));
   let name    = stack_elt_to_path_fragment (Stack.top path) in
   let kind    = snd (Stack.top path) in
   let path    = List.map fst (stack_to_list path) in
-  let content = page_creator ?kind ?theme_uri ~path header_docs content in
-  { name; content; children }
+  match root with
+  | Html ->
+    { content = page_creator ?kind ~theme_uri ~path header_docs content;
+      name; children }
+  | Body ->
+    { content = body_creator ?kind ~path header_docs content;
+      name; children }
 
 let traverse ~f t =
   let rec aux parents node =
