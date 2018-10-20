@@ -9,6 +9,9 @@ let read_string parent_definition location text =
   Error.catch (fun () ->
     Attrs.read_string parent_definition location text)
 
+let read_comment parent_definition attr =
+  Error.catch (fun () ->
+    Attrs.read_comment parent_definition attr)
 
 
 let corrupted : string -> Error.t =

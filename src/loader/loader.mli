@@ -6,6 +6,11 @@ val read_string :
   string ->
     (Model.Comment.docs_or_stop, Model.Error.t) result
 
+val read_comment :
+  Model.Paths.Identifier.label_parent ->
+  Parsetree.attribute ->
+    (Model.Comment.docs_or_stop option, Model.Error.t) result
+
 val read_cmti :
   make_root:(module_name:string -> digest:Digest.t -> Model.Root.t) ->
   filename:string ->
