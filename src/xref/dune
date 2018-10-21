@@ -1,3 +1,4 @@
 (library
  (name xref)
+ (public_name odoc.xref)
  (libraries compiler-libs.common model))

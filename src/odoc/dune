@@ -1,5 +1,6 @@
 (library
  (name odoc)
+ (public_name odoc)
  (libraries bos compiler-libs.common html fpath loader tyxml unix xref))
 
 (documentation)

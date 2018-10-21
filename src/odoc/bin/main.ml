@@ -292,9 +292,10 @@ end = struct
     let input_file = Fs.File.of_string input_file in
     if Fs.File.has_ext "mli" input_file then
       ignore (Lint.mli input_file)
-    else
-    if Fs.File.has_ext "mld" input_file then
-      ignore (Lint.mld input_file)
+    (* TODO: support mld files *)
+    (* else *)
+    (* if Fs.File.has_ext "mld" input_file then *)
+    (*   ignore (Lint.mld input_file) *)
     else begin
       Printf.eprintf "Unknown extension, expected one of: mli or mld.\n%!";
       exit 2

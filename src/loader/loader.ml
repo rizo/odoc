@@ -13,6 +13,10 @@ let read_comment parent_definition attr =
   Error.catch (fun () ->
     Attrs.read_comment parent_definition attr)
 
+let read_attributes parent_definition id attr =
+  Error.catch (fun () ->
+    Attrs.read_attributes parent_definition id attr)
+
 
 let corrupted : string -> Error.t =
   Error.filename_only "corrupted"
